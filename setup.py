@@ -10,8 +10,10 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'Click>=6.0',
-    # TODO: put package requirements here
+    'Click>=6.6',
+    'configstruct>=0.2.0',
+    'boto>=2.45.0',
+    'future>=0.16.0',
 ]
 
 test_requirements = [
