@@ -4,6 +4,7 @@ import queue
 
 _logger = logging.getLogger(__name__)
 
+
 class Worker(threading.Thread):
     _all_jobs_submitted = threading.Event()
 

@@ -14,7 +14,8 @@ from .worker import Worker
 from .progress import S3KeyProgress
 from .jobs import S3ListJob
 
-SHARDS = [chr(i) for i in range(ord('a'),ord('z')+1)] + [chr(i) for i in range(ord('0'),ord('9')+1)]
+SHARDS = ([chr(i) for i in range(ord('a'), ord('z') + 1)] +
+          [chr(i) for i in range(ord('0'), ord('9') + 1)])
 
 DEFAULTS = {
     'log_level': 'info',
@@ -23,13 +24,16 @@ DEFAULTS = {
 }
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('-c', '--config-file', type=click.Path(dir_okay=False, writable=True),
               default=os.path.join(os.path.expanduser('~'), '.s3tailrc'),
               help='Configuration file', show_default=True)
 @click.option('-r', '--region', type=click.Choice(r.name for r in s3.regions()),
               help='AWS region to use when connecting')
-@click.option('-l', '--log-level', type=click.Choice(['debug','info','warning','error','critical']),
+@click.option('-l', '--log-level',
+              type=click.Choice(['debug', 'info', 'warning', 'error', 'critical']),
               help='set logging level')
 @click.option('--log-file', metavar='FILENAME', help='write logs to FILENAME')
 @click.option('--concurrency', type=int, default=len(SHARDS))
@@ -47,7 +51,8 @@ def main(config_file, region, log_level, log_file, concurrency,
     opts = config.options
 
     # let command line options have temporary precedence if provided values
-    opts.might_prefer(region=region, log_level=log_level, log_file=log_file, concurrency=concurrency)
+    opts.might_prefer(region=region, log_level=log_level, log_file=log_file,
+                      concurrency=concurrency)
 
     s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
     bucket, prefix = s3_uri.split('/', 1)
@@ -68,14 +73,16 @@ def main(config_file, region, log_level, log_file, concurrency,
     if reduction_string:
         accumulator = eval(accumulation_string)
         accumulator_lock = threading.Lock()
-        wrapped_accumulator = ('def reducer(accumulator, name, size, last_modified): ' +
+        reducer_code = compile('def reducer(accumulator, name, size, last_modified): ' +
                                reduction_string +
-                               '; return accumulator')
-        exec wrapped_accumulator in locals()
+                               '; return accumulator', 's3workers.cli', 'exec')
+        exec(reducer_code, {}, {})
+
         def key_dumper(key):
             global accumulator
             with accumulator_lock:
-                accumulator = reducer(accumulator, key.name, key.size, key.last_modified)
+                accumulator = reducer(accumulator, key.name, key.size,  # noqa: F821
+                                      key.last_modified)
                 progress.write('%s %10d %s %s => %s',
                                key.last_modified, key.size, key.md5, key.name, accumulator)
     else:
@@ -95,6 +102,7 @@ def main(config_file, region, log_level, log_file, concurrency,
         workers.append(worker)
 
     stopped = threading.Event()
+
     def stop_work(*args):
         stopped.set()
         logger.info('Stopping! work_item_count=%d', work.qsize())
@@ -113,7 +121,7 @@ def main(config_file, region, log_level, log_file, concurrency,
     selector = compile(selection_string, '<select>', 'eval') if selection_string else None
     handler = key_deleter if command == 'delete' else key_dumper
 
-    conn = connect_to_region(opts.region) if opts.region else connect_s3()
+    conn = s3.connect_to_region(opts.region) if opts.region else connect_s3()
     bucket = conn.get_bucket(bucket_name)
 
     logger.info('Preparing %d jobs for %d workers', len(SHARDS) * len(SHARDS), len(workers))
@@ -142,7 +150,8 @@ def main(config_file, region, log_level, log_file, concurrency,
     progress.finish()
 
     if accumulator:
-        print 'accumulator: ' + str(accumulator)
+        click.echo('accumulator: ' + str(accumulator))
+
 
 if __name__ == '__main__':
     main()

@@ -3,6 +3,7 @@ import threading
 
 # TODO: http://click.pocoo.org/5/utils/#showing-progress-bars
 
+
 class SimpleProgress(object):
     def __init__(self):
         self._lock = threading.RLock()
@@ -21,6 +22,7 @@ class SimpleProgress(object):
         sys.stdout.write("\n")
         sys.stdout.flush()
 
+
 class S3KeyProgress(SimpleProgress):
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -32,6 +34,7 @@ class S3KeyProgress(SimpleProgress):
             self._counter += 1
             super(self.__class__, self).report('Selected %d of %d keys',
                                                self._selected, self._counter)
+
     def write(self, msg, *args):
         with self._lock:
             self._selected += 1

@@ -1,5 +1,6 @@
 import threading
 
+
 class Job(object):
     def __init__(self):
         self._state = 'ready'
@@ -16,11 +17,12 @@ class Job(object):
     def stop(self):
         self._stop_requested.set()
 
-    def __str__(self, details = ''):
+    def __str__(self, details=''):
         return '%s(%s) is %s' % (self.__class__.__name__, details, self._state)
 
     def _runner(self):
         pass
+
 
 class S3ListJob(Job):
     def __init__(self, bucket, prefix, selector, key_handler, progress):
@@ -40,14 +42,14 @@ class S3ListJob(Job):
                 break
             self._progress()
             if not key.md5:
-                key.md5 = key.etag[1:-1] # GROSS. HACK. Likely break if multipart-uploaded...
+                key.md5 = key.etag[1:-1]  # GROSS. HACK. Likely break if multipart-uploaded...
             if self._is_selected(key):
                 self._key_handler(key)
 
     def _is_selected(self, key):
         if not self._selector:
             return True
-        size = key.size
-        name = key.name
-        md5 = key.md5
+        size = key.size  # noqa: 841
+        name = key.name  # noqa: 841
+        md5 = key.md5    # noqa: 841
         return eval(self._selector)
