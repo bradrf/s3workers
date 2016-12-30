@@ -86,8 +86,6 @@ def main(config_file, region, log_level, log_file, concurrency,
                            key.last_modified, key.size, key.md5, key.name, accumulator)
     else:
         def key_dumper(key):
-            print key.last_modified
-            exit(7)
             progress.write('%s %10d %s %s', key.last_modified, key.size, key.md5, key.name)
 
     def key_deleter(key):
