@@ -37,14 +37,14 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               type=click.Choice(['debug', 'info', 'warning', 'error', 'critical']),
               help='set logging level')
 @click.option('--log-file', metavar='FILENAME', help='write logs to FILENAME')
-@click.option('--concurrency', type=int, default=len(SHARDS),
+@click.option('--concurrency', type=int, default=DEFAULTS['concurrency'], show_default=True,
               help='set number of workers processing jobs simultaneously')
 @click.option('--select', 'selection_string',
               help='provide comparisons against object name, size, md5, or last_modified to limit '
                    'selection')
 @click.option('--reduce', 'reduction_string',
               help='provide reduction logic against the accumulator value for all selected objects')
-@click.option('--accumulator', 'accumulation_string', default='0',
+@click.option('--accumulator', 'accumulation_string', default='0', show_default=True,
               help='provide a different initial accumulation value for the reduce option')
 @click.argument('command', type=click.Choice(['list', 'delete']))
 @click.argument('s3_uri')
@@ -86,6 +86,8 @@ def main(config_file, region, log_level, log_file, concurrency,
                            key.last_modified, key.size, key.md5, key.name, accumulator)
     else:
         def key_dumper(key):
+            print key.last_modified
+            exit(7)
             progress.write('%s %10d %s %s', key.last_modified, key.size, key.md5, key.name)
 
     def key_deleter(key):
@@ -134,17 +136,13 @@ def main(config_file, region, log_level, log_file, concurrency,
 
     logger.info('Preparing %d jobs for %d workers', len(SHARDS) * len(SHARDS), len(workers))
 
-    # break up jobs into 2 char prefix elements
-    for shard1 in SHARDS:
+    # break up jobs into single char prefix jobs
+    for shard in SHARDS:
         if stopped.isSet():
             break
-        for shard2 in SHARDS:
-            if stopped.isSet():
-                break
-            prefix_shard = prefix + shard1 + shard2
-            job = S3ListJob(bucket, prefix_shard, selector, handler, progress.report)
-            logger.debug('Submitting %s', job)
-            work.put(job)
+        job = S3ListJob(bucket, prefix + shard, selector, handler, progress.report)
+        logger.debug('Submitting %s', job)
+        work.put(job)
 
     Worker.all_jobs_submitted()
     logger.debug('All jobs submitted. Waiting on %d to complete.', work.qsize())
