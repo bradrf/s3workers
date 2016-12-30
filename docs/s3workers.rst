@@ -28,6 +28,14 @@ s3workers.progress module
     :undoc-members:
     :show-inheritance:
 
+s3workers.reducer module
+------------------------
+
+.. automodule:: s3workers.reducer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 s3workers.worker module
 -----------------------
 

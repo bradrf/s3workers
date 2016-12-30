@@ -4,4 +4,4 @@ from .jobs import S3ListJob  # noqa: F401
 
 __author__ = 'Brad Robel-Forrest'
 __email__ = 'brad@bitpony.com'
-__version__ = '0.1.0'
+__version__ = '0.2.0'

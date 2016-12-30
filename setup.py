@@ -11,7 +11,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=6.6',
-    'configstruct>=0.2.0',
+    'configstruct>=0.3.0',
     'boto>=2.45.0',
     'future>=0.16.0',
 ]
@@ -22,7 +22,7 @@ test_requirements = [
 
 setup(
     name='s3workers',
-    version='0.1.0',
+    version='0.2.0',
     description="Helper to simplify concurrent access to object scanning in AWS S3 buckets.",
     long_description=readme + '\n\n' + history,
     author="Brad Robel-Forrest",
