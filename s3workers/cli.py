@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import logging
@@ -54,9 +55,6 @@ def main(config_file, region, log_level, log_file, concurrency,
     opts.might_prefer(region=region, log_level=log_level, log_file=log_file,
                       concurrency=concurrency)
 
-    s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
-    bucket, prefix = s3_uri.split('/', 1)
-
     log_kwargs = {
         'level': getattr(logging, opts.log_level.upper()),
         'format': '[%(asctime)s #%(process)d] %(levelname)-8s %(name)-12s %(message)s',
@@ -111,12 +109,21 @@ def main(config_file, region, log_level, log_file, concurrency,
                 logger.debug(worker)
                 worker.stop()
 
+    def s3workers_exception_handler(type, value, traceback):
+        '''Ensure application does not hang waiting on the workers for unhandled exceptions.'''
+        sys.__excepthook__(type, value, traceback)
+        stop_work()
+
+    sys.excepthook = s3workers_exception_handler
+
     signal.signal(signal.SIGINT, stop_work)
     signal.signal(signal.SIGTERM, stop_work)
     signal.signal(signal.SIGPIPE, stop_work)
 
     s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
-    bucket_name, prefix = s3_uri.split('/', 1)
+    items = s3_uri.split('/', 1)
+    bucket_name = items[0]
+    prefix = items[1] if len(items) > 1 else ''
 
     selector = compile(selection_string, '<select>', 'eval') if selection_string else None
     handler = key_deleter if command == 'delete' else key_dumper
