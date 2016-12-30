@@ -11,7 +11,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=6.6',
-    'configstruct>=0.2.0',
+    'configstruct>=0.3.0',
     'boto>=2.45.0',
     'future>=0.16.0',
 ]

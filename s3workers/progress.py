@@ -39,3 +39,7 @@ class S3KeyProgress(SimpleProgress):
         with self._lock:
             self._selected += 1
             super(self.__class__, self).write(msg, *args)
+
+    def finish(self):
+        self.report()
+        super(self.__class__, self).finish()
