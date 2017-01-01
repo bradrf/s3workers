@@ -1,4 +1,4 @@
-from .worker import Worker  # noqa: F401
+from .manager import Manager  # noqa: F401
 from .progress import S3KeyProgress  # noqa: F401
 from .jobs import S3ListJob  # noqa: F401
 
