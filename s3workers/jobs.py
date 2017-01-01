@@ -8,7 +8,7 @@ class Job(object):
 
     def run(self, *args, **kwargs):
         try:
-            if not self._stop_requested.isSet():
+            if not self._stop_requested.is_set():
                 self._state = 'running'
                 self._runner(*args, **kwargs)
         finally:
@@ -25,6 +25,15 @@ class Job(object):
 
 
 class S3ListJob(Job):
+    '''Iterate through S3 objects invoking a callback for each
+
+    :param bucket: the S3 bucket manager
+    :param prefix: the key prefix to use when listing from the S3 bucket
+    :param selector: optional callback to be evaluated for when an object is "interesting"
+    :param key_handler: the callback to be invoked for each selected object (or all if no selector
+                        provided)
+    :param progress: the callback to be invoked for reporting progress through the listing
+    '''
     def __init__(self, bucket, prefix, selector, key_handler, progress):
         super(self.__class__, self).__init__()
         self._bucket = bucket
@@ -38,7 +47,7 @@ class S3ListJob(Job):
 
     def _runner(self):
         for key in self._bucket.list(prefix=self._prefix):
-            if self._stop_requested.isSet():
+            if self._stop_requested.is_set():
                 break
             self._progress()
             if not key.md5:

@@ -20,6 +20,14 @@ s3workers.jobs module
     :undoc-members:
     :show-inheritance:
 
+s3workers.manager module
+------------------------
+
+.. automodule:: s3workers.manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 s3workers.progress module
 -------------------------
 
@@ -32,6 +40,14 @@ s3workers.reducer module
 ------------------------
 
 .. automodule:: s3workers.reducer
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+s3workers.work_queue module
+---------------------------
+
+.. automodule:: s3workers.work_queue
     :members:
     :undoc-members:
     :show-inheritance:

@@ -29,9 +29,10 @@ class S3KeyProgress(SimpleProgress):
         self._counter = 0
         self._selected = 0
 
-    def report(self):
+    def report(self, final=False):
         with self._lock:
-            self._counter += 1
+            if not final:
+                self._counter += 1
             super(self.__class__, self).report('Selected %d of %d keys',
                                                self._selected, self._counter)
 
@@ -41,5 +42,5 @@ class S3KeyProgress(SimpleProgress):
             super(self.__class__, self).write(msg, *args)
 
     def finish(self):
-        self.report()
+        self.report(True)
         super(self.__class__, self).finish()
