@@ -24,6 +24,8 @@ Helper to simplify concurrent access to object scanning in AWS S3 buckets.
 * Free software: MIT license
 * Documentation: https://s3workers.readthedocs.io.
 
+Simplest install method is via ``pip install s3workers`` (see installation_ for other methods).
+
 
 Features
 --------
@@ -57,6 +59,10 @@ reduction logic against an accumulator value. For example, to produce a sum of t
 selected S3 objects or to even group the size according to MD5 values. See the usage output for
 examples. In all cases, the same variables provided by selection are also provided when reducing.
 
+Usage
+~~~~~
+
+For more help and examples of selection and reduction abilities, check out the usage_.
 
 Credits
 ---------
@@ -64,5 +70,7 @@ Credits
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project
 template.
 
+.. _installation: http://s3workers.readthedocs.io/en/latest/installation.html#installation
+.. _usage: http://s3workers.readthedocs.io/en/latest/usage.html#usage
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
