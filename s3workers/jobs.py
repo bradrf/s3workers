@@ -8,7 +8,7 @@ class Job(object):
 
     def run(self, *args, **kwargs):
         try:
-            if not self._stop_requested.isSet():
+            if not self._stop_requested.is_set():
                 self._state = 'running'
                 self._runner(*args, **kwargs)
         finally:
@@ -38,7 +38,7 @@ class S3ListJob(Job):
 
     def _runner(self):
         for key in self._bucket.list(prefix=self._prefix):
-            if self._stop_requested.isSet():
+            if self._stop_requested.is_set():
                 break
             self._progress()
             if not key.md5:

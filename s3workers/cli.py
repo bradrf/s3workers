@@ -1,20 +1,15 @@
 import os
-import sys
 import re
 import logging
 import click
-import threading
-import queue
-import signal
 
-from time import sleep
 from boto import s3, connect_s3
 from configstruct import ConfigStruct
 
-from .worker import Worker
-from .progress import S3KeyProgress
-from .jobs import S3ListJob
 from .reducer import Reducer
+from .manager import Manager
+from .jobs import S3ListJob
+from .progress import S3KeyProgress
 
 SHARDS = ([chr(i) for i in range(ord('a'), ord('z') + 1)] +
           [chr(i) for i in range(ord('0'), ord('9') + 1)])
@@ -74,6 +69,14 @@ def main(config_file, region, log_level, log_file, concurrency,
     config.configure_basic_logging(__name__)
     logger = logging.getLogger(__name__)
 
+    s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
+    items = s3_uri.split('/', 1)
+    bucket_name = items[0]
+    prefix = items[1] if len(items) > 1 else ''
+
+    conn = s3.connect_to_region(opts.region) if opts.region else connect_s3()
+    bucket = conn.get_bucket(bucket_name)
+
     progress = S3KeyProgress()
     reducer = None
 
@@ -92,65 +95,19 @@ def main(config_file, region, log_level, log_file, concurrency,
         progress.write('DELETING: %s %10d %s %s', key.last_modified, key.size, key.md5, key.name)
         key.delete()
 
-    work = queue.Queue(opts.concurrency * 3)
-    workers = []
-
-    for i in range(opts.concurrency):
-        worker = Worker(work)
-        worker.start()
-        workers.append(worker)
-
-    stopped = threading.Event()
-
-    def stop_work(*args):
-        stopped.set()
-        logger.info('Stopping! work_item_count=%d', work.qsize())
-        for worker in workers:
-            if worker.is_alive():
-                logger.debug(worker)
-                worker.stop()
-
-    def s3workers_exception_handler(type, value, traceback):
-        '''Ensure application does not hang waiting on the workers for unhandled exceptions.'''
-        sys.__excepthook__(type, value, traceback)
-        stop_work()
-
-    sys.excepthook = s3workers_exception_handler
-
-    signal.signal(signal.SIGINT, stop_work)
-    signal.signal(signal.SIGTERM, stop_work)
-    signal.signal(signal.SIGPIPE, stop_work)
-
-    s3_uri = re.sub(r'^(s3:)?/+', '', s3_uri)
-    items = s3_uri.split('/', 1)
-    bucket_name = items[0]
-    prefix = items[1] if len(items) > 1 else ''
-
     selector = compile(selection_string, '<select>', 'eval') if selection_string else None
     handler = key_deleter if command == 'delete' else key_dumper
 
-    conn = s3.connect_to_region(opts.region) if opts.region else connect_s3()
-    bucket = conn.get_bucket(bucket_name)
+    manager = Manager(opts.concurrency)
+    manager.start_workers()
 
-    logger.info('Preparing %d jobs for %d workers', len(SHARDS) * len(SHARDS), len(workers))
+    logger.info('Preparing %d jobs for %d workers', len(SHARDS), manager.worker_count)
 
     # break up jobs into single char prefix jobs
     for shard in SHARDS:
-        if stopped.isSet():
-            break
-        job = S3ListJob(bucket, prefix + shard, selector, handler, progress.report)
-        logger.debug('Submitting %s', job)
-        work.put(job)
+        manager.add_work(S3ListJob(bucket, prefix + shard, selector, handler, progress.report))
 
-    Worker.all_jobs_submitted()
-    logger.debug('All jobs submitted. Waiting on %d to complete.', work.qsize())
-
-    while threading.active_count() > 1:
-        sleep(0.1)
-
-    for worker in workers:
-        worker.join(1)
-
+    manager.wait_for_workers()
     progress.finish()
 
     if reducer:

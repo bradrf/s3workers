@@ -26,9 +26,9 @@ class Worker(threading.Thread):
 
     def run(self):
         while True:
-            if self._stop_requested.isSet():
+            if self._stop_requested.is_set():
                 break
-            if Worker._all_jobs_submitted.isSet() and self._work.empty():
+            if Worker._all_jobs_submitted.is_set() and self._work.empty():
                 break
             try:
                 with self._current_lock:
