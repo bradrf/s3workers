@@ -2,6 +2,11 @@
 History
 =======
 
+0.3.0 (2017-01-01)
+------------------
+
+* Refactor/reorg code for usability/readability; add docs; add tests.
+
 0.2.0 (2016-12-30)
 ------------------
 
