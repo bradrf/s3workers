@@ -56,13 +56,13 @@ To use s3workers in a project
 
     manager = s3workers.Manager(3)
 
-    bucket = boto.connect_s3().get_bucket('unitycloud-collab-store-development')
+    bucket = boto.connect_s3().get_bucket('mybucket')
     progress = s3workers.S3KeyProgress()
 
     def key_dumper(key):
         progress.write('%s %10d %s %s', key.last_modified, key.size, key.md5, key.name)
 
-    job = s3workers.S3ListJob(bucket, 'brad/f', None, key_dumper, progress.report)
+    job = s3workers.S3ListJob(bucket, 'myprefix', None, key_dumper, progress.report)
     manager.add_work(job)
 
     manager.start_workers()
