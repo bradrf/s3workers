@@ -11,6 +11,6 @@ PyYAML==3.12
 pytest==3.0.5
 mockfs==1.0.2
 configstruct==0.3.0
-boto==2.45.0
+boto==2.46.0
 click==6.7
 moto==0.4.30
