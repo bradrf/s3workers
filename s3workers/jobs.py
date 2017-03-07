@@ -50,10 +50,13 @@ class S3ListJob(Job):
             if self._stop_requested.is_set():
                 break
             self._progress()
-            if not key.md5:
-                key.md5 = key.etag[1:-1]  # GROSS. HACK. Likely break if multipart-uploaded...
-            if self._is_selected(key):
-                self._key_handler(key)
+            try:
+                if not key.md5:
+                    key.md5 = key.etag[1:-1]  # GROSS. HACK. Likely break if multipart-uploaded...
+                if self._is_selected(key):
+                    self._key_handler(key)
+            except:
+                pass
 
     def _is_selected(self, key):
         if not self._selector:
